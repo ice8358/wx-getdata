@@ -1,0 +1,22 @@
+{
+  "name": "wxdata",
+  "version": "1.0.0",
+  "description": "获取微信后台数据",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "res": "node ./e2e/res.spec.js",
+    "link": "node ./e2e/link.spec.js"
+  },
+  "author": "yuanyanfang",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "fs": "0.0.1-security",
+    "json2xls": "^0.1.2"
+  },
+  "devDependencies": {
+    "puppeteer": "^5.3.1",
+    "rize": "^0.9.0"
+  }
+}
