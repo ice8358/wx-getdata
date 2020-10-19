@@ -3,15 +3,16 @@ const cheerio = require('cheerio');
 const rize = new Rize({ headless: false });
 const fs = require('fs')
 const json2xls = require('json2xls');
-var count = 0;
+var query = require('../custom');
 var arr = [];
-rize.goto('https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN&token=983459744')
-    .withAuth('shiguanghuijide5', 'Sssj655888')
-    .withHeaders({'cookie': 'appmsglist_action_3092634507=card; appmsglist_action_3585759551=card; pgv_pvi=5769268224; RK=yZz4YsTyfg; ptcz=d728532d357df8c9c80c644c6d67e6067dbc287607e352edff1cdb29dc227c61; pgv_pvid=1603762680; o_cookie=835822143; pac_uid=1_835822143; tvfe_boss_uuid=631712f432f1c5df; ua_id=fndq67IUcDIkVNvHAAAAANTMMCiZHy7c0Sm3toaKN-k=; mm_lang=zh_CN; wxuin=91166257033798; ts_uid=8423594688; iip=0; ptui_loginuin=835822143; _mta_closed_sysmsg=9999; eas_sid=N1Y6M0G0c2y4T5t5V2b6a3M5N1; noticeLoginFlag=1; openid2ticket_oYQthtzUwj5gEyWuG2yFP7eKgnJs=IgjtxRaWZvrg/KX5H5c3HtEYRjnwBy0uXQMjrvFR2CE=; bizuin=3585759551; rewardsn=; wxtokenkey=777; pgv_si=s1103371264; uuid=795a0360c671787347b331021ae01c65; ticket=c1a0c0068d87c8c35d1f849c457e4cb052040b6e; ticket_id=gh_96d8e1743eba; cert=uqNQq6X3ycjzhNwhMhYJvDgVM2nM2OR6; rand_info=CAESIMEcSWKn2m3ICO2qAd+rDXMcxb3D35blwKId74lL+Xk3; slave_bizuin=3585759551; data_bizuin=3585759551; data_ticket=Z2fiXNO2I1ZcOgvmsJ2yN/5/0fZP8IYITysxxgOiRSEULCwZjBzUANn48dGG7Fr9; slave_sid=bWNKaTkzaGpwUjNDWmZYVkpuQmR0TGcxZDR4OWhpUEFpZU1hRWlpSjJfakszcjk0aWFSeTRCOXBaWml0cG1QV3BRRWg1N2pkcGFvdnJrRTFydFVQb25TbGRsd2VTZllaNE8yb011bmpsYUx0dTFXTFdxMnZCWEVPSUZKSGZob1REeGg1bzZvNHJEd1J2V3ll; slave_user=gh_96d8e1743eba; xid=737c7aae933adc21b7d6f09024c7860b; openid2ticket_oP1m61Rzj-WCY9ne7zKxKxuLZ0UY=Xl5WL7OILUwk1hrfBDCGkwSnG+5S2d/9dBCwOeZV9SM='});
+rize.goto(query.url)
+    .withAuth(query.username, query.password)
+    .withHeaders({'cookie': query.cookie});
 // 获取页面详情信息
-async function getPageDetail() {
-    console.log('开始查找',count)
-    const htmlStr1 = await rize.find('ul#list',rize.html)
+async function getPageDetail(startPage) {
+    rize.waitForNavigation(300);
+    console.log('开始查找',startPage)
+    const htmlStr1 = await rize.find('ul#list',rize.html);
     var $ = cheerio.load(htmlStr1);
 
     $("li").each(function(index,item) {
@@ -48,24 +49,38 @@ setTimeout(async ()=>{
     var currentPage = await rize.findAll(".weui-desktop-pagination__num", 0, rize.text)
     var allPage = await rize.findAll(".weui-desktop-pagination__num", 1, rize.text)
     console.log('当前页：',currentPage,'总页数：',allPage)
-    let start = 1;
+    let start = query.start; // 开始页
+    let end = query.end > allPage ? allPage : query.end; // 结束页
+
+    let endPage = end ? end : allPage; // 结束页
+    if (start < 1) {
+        rize.end();
+        return;
+    };
+    if (end < start) {
+        rize.end();
+        return;
+    };
+    if (start != 1) {
+        rize.type('input.weui-desktop-pagination__input', String(start))
+            .press('Enter')
+            .waitForNavigation(300);
+    }
     let timer = setInterval(async ()=>{
-        count ++;
-        getPageDetail()
-        start ++;
-        if (start > allPage) {
+        if (start > endPage) {
             console.log('最后一页了！！！')
             clearInterval(timer);
             timer = null;
+            rize.end();
             toJson();
             toEcel();
         } else {
-            rize.clickLink('下一页')
+            getPageDetail(start);
+            rize.waitForNavigation(300);
+            rize.clickLink('下一页');
+            start ++;
         }
     },1000)
-    setTimeout(()=>{
-        rize.end();       
-    },15000)  
 },10000)
 
 var path = 'data.json';
@@ -81,8 +96,6 @@ function toJson() {
 }
 
 function toEcel() {
-    console.log('写成excel表格格式咯！！！');
-    
     var jsonArray = [];
     arr.forEach(function(item){
         let temp = {
@@ -98,5 +111,7 @@ function toEcel() {
     let xls = json2xls(jsonArray);
     
     fs.writeFileSync('微信数据.xlsx', xls, 'binary');
+
+    console.log('写成excel表格格式咯！！！');
 }
 

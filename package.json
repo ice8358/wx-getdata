@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "cs": "node test.js",
     "res": "node ./e2e/res.spec.js",
     "link": "node ./e2e/link.spec.js"
   },
