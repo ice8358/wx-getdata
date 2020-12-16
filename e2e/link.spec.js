@@ -80,7 +80,7 @@ setTimeout(async ()=>{
             rize.clickLink('下一页');
             start ++;
         }
-    },1000)
+    },3000)
 },10000)
 
 var path = 'data.json';

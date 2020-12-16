@@ -9,7 +9,7 @@ const rize = new Rize({
  });
 
 
-fs.readFile('data1.json','utf8',(err,data)=>{
+fs.readFile('data.json','utf8',(err,data)=>{
     if (err) {
         console.log('出错了',err)
         throw err
@@ -75,7 +75,7 @@ fs.readFile('data1.json','utf8',(err,data)=>{
             clearInterval(dataTimer);
             dataTimer = null;
             let xls = json2xls(jsonArray);
-            fs.writeFileSync('微信公众号数据-来源.xlsx', xls, 'binary');
+            fs.writeFileSync('微信公众号数据-来源2.xlsx', xls, 'binary');
             console.log('表格生成成功啦！！！！')
             var path = 'videodata.json';
 
